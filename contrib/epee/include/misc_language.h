@@ -159,5 +159,18 @@ namespace misc_utils
     return slc;
   }
 
+  // Herb Sutter's simple implementation of make_unique(): http://herbsutter.com/gotw/_102/
+  // for compilers <= C++14
+  #if if __cplusplus <= 201103L 
+  namespace std
+  {
+    template<typename T, typename ...Args>
+    std::unique_ptr<T> make_unique( Args&& ...args )
+    {
+        return std::unique_ptr<T>( new T( std::forward<Args>(args)... ) );
+    }
+  }
+  #endif
+
 }
 }
