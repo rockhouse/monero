@@ -160,4 +160,37 @@ namespace misc_utils
   }
 
 }
+
+// Herb Sutter's simple implementation of make_unique(): http://herbsutter.com/gotw/_102/
+// for compilers < C++14 extended by
+// https://github.com/abseil/abseil-cpp/blob/master/absl/memory/memory.h
+
+#if (__cplusplus <= 201103L || !defined(_MSC_VER)) && 
+  (defined(__GNUC__) && __GNUC__ != 4 && __GNUC_MINOR__ != 8) 
+  {
+    namespace std
+    {
+      template<typename T, typename ...Args>
+      std::unique_ptr<T> make_unique( Args&& ...args )
+      {
+          return std::unique_ptr<T>( new T( std::forward<Args>(args)... ) );
+      }
+    
+      // overload for an array T[] of unknown bounds.
+      // The array allocation needs to use the `new T[size]` form and cannot take
+      // element constructor arguments. The `std::unique_ptr` will manage destructing
+      // these array elements.
+      template <typename T>
+      std::unique_ptr<T[]> make_unique(size_t n) 
+      {
+        return std::unique_ptr<T>(new typename std::remove_extent<T>[n]());
+      }
+      
+      // overload for an array T[N] of known bounds.
+      // This construction will be rejected.
+      template <typename T, typename... Args>
+      void make_unique(Args&&... /* args */) = delete;
+    }
+  }
+#endif
 }
